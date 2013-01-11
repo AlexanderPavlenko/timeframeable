@@ -21,7 +21,7 @@ module Timeframeable
 
       options[:start_key] ||= :start
       options[:end_key]   ||= :end
-      options[:variable]  ||= :'@timeframe'
+      options[:variable]  ||= :timeframe
       options[:defaults] = options[:defaults].map do |x|
         if x.is_a? Symbol
           if x == :now
@@ -87,6 +87,6 @@ private
   def set_timeframe(options)
     start_date = Timeframeable.parse_date(params[options[:start_key]]) || options[:defaults][0].to_datetime
     end_date   = Timeframeable.parse_date(params[options[:end_key]], :end) || options[:defaults][1].to_datetime
-    instance_variable_set options[:variable], Timeframe.new(start_date.utc, end_date.utc)
+    instance_variable_set :"@#{options[:variable]}", Timeframe.new(start_date.utc, end_date.utc)
   end
 end

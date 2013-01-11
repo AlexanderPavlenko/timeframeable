@@ -37,7 +37,7 @@ describe Timeframeable do
       {
         :start_key => :start,
         :end_key => :end,
-        :variable => :'@timeframe',
+        :variable => :timeframe,
         :defaults => [DateTime.now.beginning_of_month, DateTime.now]
       }
     }
@@ -84,7 +84,7 @@ describe Timeframeable do
       it 'falls back to default values' do
         stub(controller).params{ {} }
         controller.send :set_timeframe, default_options
-        controller.instance_variable_get(default_options[:variable]).should ==
+        controller.instance_variable_get(:"@#{default_options[:variable]}").should ==
           Timeframeable::Timeframe.new(*default_options[:defaults])
       end
 
@@ -92,18 +92,18 @@ describe Timeframeable do
         dates = default_options[:defaults].map{|d| d.prev_month.utc.change(:usec => 0) }
         stub(controller).params{ Hash[[:start, :end].zip(dates.map(&:to_s))] }
         controller.send :set_timeframe, default_options
-        controller.instance_variable_get(default_options[:variable]).should ==
+        controller.instance_variable_get(:"@#{default_options[:variable]}").should ==
           Timeframeable::Timeframe.new(*dates)
       end
 
       it 'allows multiple timeframes to be set' do
         stub(controller).params{ {} }
-        other_options = default_options.merge(:variable => :'@test', :defaults => default_options[:defaults].map(&:prev_month))
+        other_options = default_options.merge(:variable => :test, :defaults => default_options[:defaults].map(&:prev_month))
         controller.send :set_timeframe, default_options
         controller.send :set_timeframe, other_options
-        controller.instance_variable_get(default_options[:variable]).should ==
+        controller.instance_variable_get(:"@#{default_options[:variable]}").should ==
           Timeframeable::Timeframe.new(*default_options[:defaults])
-        controller.instance_variable_get(other_options[:variable]).should ==
+        controller.instance_variable_get(:"@#{other_options[:variable]}").should ==
           Timeframeable::Timeframe.new(*other_options[:defaults])
       end
     end
