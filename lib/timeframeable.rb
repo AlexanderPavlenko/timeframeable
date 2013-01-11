@@ -14,23 +14,20 @@ module Timeframeable
 
   module ClassMethods
     def timeframeable(options={})
-      raise 'Timeframe defaults not defined' if options[:defaults].blank?
-      raise 'Invalid Timeframe defaults' unless options[:defaults].size == 2
-
       options = options.dup
-
       options[:start_key] ||= :start
       options[:end_key]   ||= :end
       options[:variable]  ||= :timeframe
+      options[:defaults]  ||= []
       options[:defaults] = options[:defaults].map do |x|
         if x.is_a? Symbol
           if x == :now
-            DateTime.now
+            DateTime.now.utc
           else
-            DateTime.now.send(x)
+            DateTime.now.send(x).utc
           end
         else
-          x
+          x && x.to_datetime.utc
         end
       end
 
@@ -72,10 +69,10 @@ module Timeframeable
         else
       end
 
-      result
+      result.utc
     else
       begin
-        DateTime.parse(param.to_s)
+        DateTime.parse(param.to_s).utc
       rescue
         return
       end
@@ -85,8 +82,8 @@ module Timeframeable
 private
 
   def set_timeframe(options)
-    start_date = Timeframeable.parse_date(params[options[:start_key]]) || options[:defaults][0].to_datetime
-    end_date   = Timeframeable.parse_date(params[options[:end_key]], :end) || options[:defaults][1].to_datetime
-    instance_variable_set :"@#{options[:variable]}", Timeframe.new(start_date.utc, end_date.utc)
+    start_date = Timeframeable.parse_date(params[options[:start_key]]) || options[:defaults][0]
+    end_date   = Timeframeable.parse_date(params[options[:end_key]], :end) || options[:defaults][1]
+    instance_variable_set :"@#{options[:variable]}", Timeframe.new(start_date, end_date)
   end
 end

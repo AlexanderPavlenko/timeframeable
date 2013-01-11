@@ -4,17 +4,30 @@ require 'timecop'
 
 describe Timeframeable do
 
+  def assert_utc(date)
+    case date
+      when DateTime
+        date.utc?.should be_true
+      when Struct
+        date.start.utc?.should be_true if date.start
+        date.end.utc?.should be_true if date.end
+      else
+        raise "Unknown object: #{date}"
+    end
+    date
+  end
+
   it 'has dedicated data structure' do
-    data = Timeframeable::Timeframe.new(1, 2)
-    data.start.should == 1
-    data.end.should   == 2
+    date = Timeframeable::Timeframe.new(1, 2)
+    date.start.should == 1
+    date.end.should   == 2
   end
 
   describe 'Timeframeable.parse_date' do
 
     it 'uses DateTime.parse for strings' do
-      data = DateTime.now.change(:usec => 0)
-      Timeframeable.parse_date(data.to_s).should == data
+      date = DateTime.now.change(:usec => 0)
+      assert_utc(Timeframeable.parse_date(date.to_s)).should == date
     end
 
     it 'suppress exceptions on invalid strings' do
@@ -22,12 +35,22 @@ describe Timeframeable do
     end
 
     it 'accepts composite param' do
-      Timeframeable.parse_date({:year => 2013, :month => 1, :day => 15}).should == DateTime.new(2013, 1, 15)
+      assert_utc(Timeframeable.parse_date({:year => 2013, :month => 1, :day => 15})).should ==
+        DateTime.new(2013, 1, 15)
+    end
+
+    it 'accepts incomplete composite param' do
+      assert_utc(Timeframeable.parse_date({:year => 2013, :month => 1})).should ==
+        DateTime.new(2013, 1, 1)
+      assert_utc(Timeframeable.parse_date({:month => 1})).should ==
+        DateTime.new(Date.today.year, 1, 1)
     end
 
     it 'extrapolates range to its end' do
-      Timeframeable.parse_date({:year => 2013, :month => 1, :day => 15}, :end).should == DateTime.new(2013, 1, 15).end_of_day
-      Timeframeable.parse_date({:year => 2013, :month => 1}, :end).should == DateTime.new(2013, 1, 1).end_of_month.end_of_day
+      assert_utc(Timeframeable.parse_date({:year => 2013, :month => 1, :day => 15}, :end)).should ==
+        DateTime.new(2013, 1, 15).end_of_day
+      assert_utc(Timeframeable.parse_date({:year => 2013, :month => 1}, :end)).should ==
+        DateTime.new(2013, 1, 1).end_of_month.end_of_day
     end
   end
 
@@ -46,12 +69,15 @@ describe Timeframeable do
       controller.class.class_eval do
         include Timeframeable
       end
+      mock(controller.class).before_filter().at_least(1) {|block| controller.instance_eval(&block) }
     end
 
     describe 'Controller.timeframeable' do
 
-      before do
-        mock(controller.class).before_filter() {|block| controller.instance_eval(&block) }
+      it 'timeframes without options' do
+        default_options[:defaults] = []
+        mock(controller).set_timeframe(default_options)
+        controller.class.timeframeable
       end
 
       it 'timeframes with default options' do
@@ -81,29 +107,37 @@ describe Timeframeable do
     end
 
     describe 'Controller#set_timeframe' do
+      it 'falls back to nils' do
+        stub(controller).params{ {} }
+        default_options[:defaults] = []
+        controller.class.timeframeable default_options
+        assert_utc(controller.instance_variable_get(:"@#{default_options[:variable]}")).should ==
+          Timeframeable::Timeframe.new(nil, nil)
+      end
+
       it 'falls back to default values' do
         stub(controller).params{ {} }
-        controller.send :set_timeframe, default_options
-        controller.instance_variable_get(:"@#{default_options[:variable]}").should ==
+        controller.class.timeframeable default_options
+        assert_utc(controller.instance_variable_get(:"@#{default_options[:variable]}")).should ==
           Timeframeable::Timeframe.new(*default_options[:defaults])
       end
 
       it 'uses actual params' do
         dates = default_options[:defaults].map{|d| d.prev_month.utc.change(:usec => 0) }
         stub(controller).params{ Hash[[:start, :end].zip(dates.map(&:to_s))] }
-        controller.send :set_timeframe, default_options
-        controller.instance_variable_get(:"@#{default_options[:variable]}").should ==
+        controller.class.timeframeable default_options
+        assert_utc(controller.instance_variable_get(:"@#{default_options[:variable]}")).should ==
           Timeframeable::Timeframe.new(*dates)
       end
 
       it 'allows multiple timeframes to be set' do
         stub(controller).params{ {} }
         other_options = default_options.merge(:variable => :test, :defaults => default_options[:defaults].map(&:prev_month))
-        controller.send :set_timeframe, default_options
-        controller.send :set_timeframe, other_options
-        controller.instance_variable_get(:"@#{default_options[:variable]}").should ==
+        controller.class.timeframeable default_options
+        controller.class.timeframeable other_options
+        assert_utc(controller.instance_variable_get(:"@#{default_options[:variable]}")).should ==
           Timeframeable::Timeframe.new(*default_options[:defaults])
-        controller.instance_variable_get(:"@#{other_options[:variable]}").should ==
+        assert_utc(controller.instance_variable_get(:"@#{other_options[:variable]}")).should ==
           Timeframeable::Timeframe.new(*other_options[:defaults])
       end
     end

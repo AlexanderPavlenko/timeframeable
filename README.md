@@ -19,6 +19,10 @@ Or install it yourself as:
 
 ## Usage
 
+Inject dates from ```params[:start]``` and ```params[:end]``` or nils into ```@timeframe.start``` and ```@timeframe.end```:
+
+    timeframeable
+
 Inject dates from ```params[:start]``` and ```params[:end]``` or their default values into ```@timeframe.start``` and ```@timeframe.end```:
 
     timeframeable :defaults => [:beginning_of_month, :now]
