@@ -21,42 +21,50 @@ Or install it yourself as:
 
 ### Controller module
 
-    class FrontController < ApplicationController
-      include Timeframeable
+Typical usage:
 
-      # Inject dates from params[:start] and params[:end] or nils into @timeframe.start and @timeframe.end
-      timeframeable
+```ruby
+class FrontController < ApplicationController
+  include Timeframeable
+  timeframeable
+```
 
-     === OR ===
+This will inject dates from `params[:start]` and `params[:end]` into `@timeframe.start` and `@timeframe.end`. `nil` will be used if parameter was not found. You can specify default values to avoid this:
 
-      # Inject dates from params[:start] and params[:end] or their default values into @timeframe.start and @timeframe.end
-      timeframeable :defaults => [:beginning_of_month, :now]
+```ruby
+  timeframeable :defaults => [:beginning_of_month, :now]
+```
 
-     === OR ===
+You can specify keys to seek at params hash:
 
-      # Inject dates from params[:s] and params[:e] or their default values into @timeframe.start and @timeframe.end
-      timeframeable :defaults => [:beginning_of_month, :now], :start_key => :s, :end_key => :e
+```ruby
+  timeframeable :defaults => [:beginning_of_month, :now],
+    :start_key => :s,
+    :end_key   => :e
+```
 
-     === OR ===
+Or even specify instance variable to fill:
 
-      # Inject dates from params[:start] and params[:end] or their default values into @timeframe.start and @timeframe.end,
-      # and inject dates from params[:s] and params[:e] or their default values into @tf.start and @tf.end
-      timeframeable :defaults => [:beginning_of_month, :now]
-      timeframeable :defaults => [:beginning_of_month, :now], :start_key => :s, :end_key => :e, :variable => :tf
-
-      # # #
-    end
+```ruby
+  timeframeable :defaults => [:beginning_of_month, :now],
+    :start_key => :s,
+    :end_key   => :e,
+    :variable  => :tf
+```
 
 ### ActiveRecord module
 
-    class Model < ActiveRecord::Base
-      include Timeframeable::Scope
-    end
+```ruby
+class Model < ActiveRecord::Base
+  include Timeframeable::Scope
+end
 
-    Model.timeframe(:created_at, @timeframe).count
+Model.timeframe(:created_at, @timeframe).count
+```
 
 ## TODO
-If there will be such a need, it may be usefull to add ```:start_value``` and ```:end_value``` lambda options, which will extract appropriate values from ```params``` bypassing ```:start_key``` and ```:end_key```.
+
+It might be usefull to add `:start_value` and `:end_value` lambda options, which will extract appropriate values from `params` bypassing `:start_key` and `:end_key`.
 
 ## Contributing
 
