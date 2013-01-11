@@ -1,8 +1,8 @@
-require_relative '../spec_helper'
+require_relative '../../spec_helper'
 require 'timeframeable'
 require 'timecop'
 
-describe Timeframeable do
+describe Timeframeable::Controller do
 
   def assert_utc(date)
     case date
@@ -67,7 +67,7 @@ describe Timeframeable do
 
     before do
       controller.class.class_eval do
-        include Timeframeable
+        include Timeframeable::Controller
       end
       mock(controller.class).before_filter().at_least(1) {|block| controller.instance_eval(&block) }
     end

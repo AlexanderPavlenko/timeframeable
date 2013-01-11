@@ -25,7 +25,7 @@ Typical usage:
 
 ```ruby
 class FrontController < ApplicationController
-  include Timeframeable
+  include Timeframeable::Controller
   timeframeable
 ```
 

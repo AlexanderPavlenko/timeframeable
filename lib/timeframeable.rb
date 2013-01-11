@@ -1,42 +1,17 @@
 require 'timeframeable/version'
 require 'active_support/concern'
-require 'timeframeable/scope'
 require 'date'
 require 'active_support/core_ext/date/calculations'
 require 'active_support/core_ext/date/conversions'
 require 'active_support/core_ext/time/calculations'
 require 'active_support/core_ext/date_time/calculations'
 require 'active_support/core_ext/date_time/conversions'
+require 'timeframeable/controller'
+require 'timeframeable/scope'
 
 module Timeframeable
-  extend ActiveSupport::Concern
 
   Timeframe = Struct.new(:start, :end)
-
-  module ClassMethods
-    def timeframeable(options={})
-      options = options.dup
-      options[:start_key] ||= :start
-      options[:end_key]   ||= :end
-      options[:variable]  ||= :timeframe
-      options[:defaults]  ||= []
-      options[:defaults] = options[:defaults].map do |x|
-        if x.is_a? Symbol
-          if x == :now
-            DateTime.now.utc
-          else
-            DateTime.now.send(x).utc
-          end
-        else
-          x && x.to_datetime.utc
-        end
-      end
-
-      before_filter do
-        set_timeframe options
-      end
-    end
-  end
 
   def self.parse_date(param, extrapolate=nil)
     return unless param
@@ -78,13 +53,5 @@ module Timeframeable
         return
       end
     end
-  end
-
-private
-
-  def set_timeframe(options)
-    start_date = Timeframeable.parse_date(params[options[:start_key]]) || options[:defaults][0]
-    end_date   = Timeframeable.parse_date(params[options[:end_key]], :end) || options[:defaults][1]
-    instance_variable_set :"@#{options[:variable]}", Timeframe.new(start_date, end_date)
   end
 end
