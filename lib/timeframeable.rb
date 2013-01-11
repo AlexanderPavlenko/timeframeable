@@ -1,5 +1,6 @@
 require 'timeframeable/version'
 require 'active_support/concern'
+require 'timeframeable/scope'
 require 'date'
 require 'active_support/core_ext/date/calculations'
 require 'active_support/core_ext/date/conversions'
