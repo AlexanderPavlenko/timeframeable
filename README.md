@@ -3,6 +3,8 @@
 Timeframeable module allows you to easily extract datetime range from request params keeping you controllers DRY.
 Intended to use with Rails 3, but may be compatible or easily adaptable with/to other versions.
 
+![Travis CI](https://api.travis-ci.org/AlexanderPavlenko/timeframeable.png "Travis CI")
+
 ## Installation
 
 Add this line to your application's Gemfile:
