@@ -40,9 +40,11 @@ describe Timeframeable::Controller do
     end
 
     it 'accepts incomplete composite param' do
-      assert_utc(Timeframeable.parse_date({:year => 2013, :month => 1})).should ==
-        DateTime.new(2013, 1, 1)
-      assert_utc(Timeframeable.parse_date({:month => 1})).should ==
+      assert_utc(Timeframeable.parse_date({:year => 2013, :month => 2})).should ==
+        DateTime.new(2013, 2, 1)
+      assert_utc(Timeframeable.parse_date({:month => 3})).should ==
+        DateTime.new(Date.today.year, 3, 1)
+      assert_utc(Timeframeable.parse_date({})).should ==
         DateTime.new(Date.today.year, 1, 1)
     end
 
